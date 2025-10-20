@@ -486,7 +486,7 @@ const ButtonTest = () => {
 export default ButtonTest;
 ```
 
-- `/src/app/page.tsx` 출력
+- `/src/app/page.tsx` 출력.
 
 ```tsx
 import ButtonTest from '@/components/ButtonTest';
