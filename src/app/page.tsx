@@ -1,9 +1,11 @@
 import ButtonTest from '@/components/ButtonTest';
+import SCSSTest from '@/components/SCSSTest';
 
 export default function Home() {
   return (
-    <div className='w-screen h-screen flex items-center justify-center'>
+    <div>
       <ButtonTest />
+      <SCSSTest />
     </div>
   );
 }
