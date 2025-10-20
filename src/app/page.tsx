@@ -2,7 +2,7 @@ import ButtonTest from '@/components/ButtonTest';
 
 export default function Home() {
   return (
-    <div>
+    <div className='w-screen h-screen flex items-center justify-center'>
       <ButtonTest />
     </div>
   );
