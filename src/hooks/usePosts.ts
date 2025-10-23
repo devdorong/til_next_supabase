@@ -38,7 +38,7 @@ export function usePost(id: number) {
 }
 
 // 새 글을 등록하는 훅
-export function useCreatePosts() {
+export function useCreatePost() {
   // 꼭 알아두자
   // 아래 구문은 React Query의 데이터 저장소에 접근하기 위한 훅
   // 서버에서 가져온 데이터를 관리하는 관리자를 불러옴
@@ -95,7 +95,7 @@ export function useUpdatePost() {
 }
 
 // 게시글 삭제
-export function useDeletePosts() {
+export function useDeletePost() {
   const queryClient = useQueryClient();
   return useMutation({
     // 다음처럼 사용하기 위해서 정의함.

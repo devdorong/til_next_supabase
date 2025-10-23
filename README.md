@@ -889,6 +889,898 @@ export const useQueryStore = () => {
 
 - `/src/hooks/useQueryIntegration.ts 파일` 생성
 
+```ts
+// React Query 와 Zustand 통합 훅
+
+import { fetchPost, fetchUser } from '@/lib/api';
+import { useQueryStore } from '@/stores/QueryStore';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+// 선택된 사용자 정보를 가져오는 훅
+export function useSelectedUser() {
+  // 사용자 정보를 zustand 로 관리
+  const { selectedUserId } = useQueryStore();
+  return useQuery({
+    queryKey: ['users', selectedUserId],
+    queryFn: () => fetchUser(selectedUserId!),
+    enabled: !!selectedUserId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
+// 선택된 게시글 정보를 가져오는 훅
+export function useSelectedPost() {
+  // 사용자 정보를 zustand 로 관리
+  const { selectedPostId } = useQueryStore();
+  return useQuery({
+    queryKey: ['posts', selectedPostId],
+    queryFn: () => fetchPost(selectedPostId!),
+    enabled: !!selectedPostId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
+// 사용자 선택 기능을 제공하는 훅
+export function useUserSelection() {
+  const { selectedUserId, setSelectedUserId } = useQueryStore();
+  const selectedUserQuery = useSelectedUser();
+  return {
+    // 상태
+    selectedUserId,
+    selectedUser: selectedUserQuery.data, // 사용자 데이터
+    isLoading: selectedUserQuery.isLoading, // 로딩 상태
+    error: selectedUserQuery.error, // 에러 상태
+
+    // 액션들
+    selectUser: (userId: number) => setSelectedUserId(userId),
+    clearSelection: () => setSelectedUserId(null),
+    // 쿼리 정보
+    query: selectedUserQuery,
+  };
+}
+
+// 쿼리 프래패치를 위한 훅
+// - 사용자가 특정 데이터를 필요로 할 것이라고 예상해서
+// - 미리 데이터를 가져와서 캐시에 저장하는 프리패치 기능용 훅
+export function usePrefetchQuery() {
+  // React Query 의 전역 캐시(useQuery, useMutation) 를 관리함.
+  const queryClient = useQueryClient();
+  return {
+    // 프리패치할 것들
+    // 사용자 정보를 미리 캐시에 보관함(프리패치)
+    prefetchUser: (userId: number) => {
+      queryClient.prefetchQuery({
+        queryKey: ['users', userId],
+        queryFn: () => fetchUser(userId),
+        staleTime: 5 * 60 * 1000,
+      });
+    },
+    // 사용자의 게시글을 미리 캐시에 보관함.
+    prefetchUserPosts: (userId: number) => {
+      queryClient.prefetchQuery({
+        queryKey: ['posts', 'user', userId],
+        queryFn: () => fetchPosts(userId),
+        staleTime: 2 * 60 * 1000,
+      });
+    },
+  };
+}
+```
+
 ### 7.2. 컴포넌트 생성 및 적용하고 테스트하기
 
-- `/src/components/.tsx 파일` 생성
+- `/src/components/UsersList.tsx 파일` 생성
+  - 사용자 목록
+
+```tsx
+// 사용자 목록 컴포넌트
+// useQuery 를 사용해서 사용자 목록가져오고 표시함
+// 로딩상태, 에러상태, 데이터 표시 처리
+'use client';
+import { useUserSelection } from '@/hooks/useQueryIntegration';
+import { useUsers } from '@/hooks/useUsers';
+
+const UsersList = () => {
+  // 사용자 목록 가져오기
+  // useQuery 를 활용하면 리턴으로 다양한 정보 객체를 전달해줌.
+  // data : 리턴되는 값, isLoading : 로딩 상태, error : 에러 정보
+  const { data: users, isLoading, error } = useUsers();
+
+  // 사용자 선택 기능 가져오기
+  const { selectedUserId, selectUser, clearSelection } = useUserSelection();
+
+  // 상황에 따라서 출력을 달리함.
+  // 로딩 상태일 때
+  if (isLoading) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-2 text-gray-600'>Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+  // 에러 상태일 떄
+  if (error) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center text-red-600'>
+          <p className='text-lg font-semibold'>Error loading users</p>
+          <p className='text-sm mt-1'>{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-4'>
+      {/* 컴포넌트 제목 */}
+      <div className='flex justify-between items-center'>
+        <h2 className='text-2xl font-bold text-gray-800'>
+          Users List ({users?.length || 0})
+        </h2>
+
+        {/* 선택된 사용자가 있을 때 선택 해제 버튼 */}
+        {selectedUserId && (
+          <button
+            onClick={clearSelection}
+            className='px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors'
+          >
+            Clear Selection
+          </button>
+        )}
+      </div>
+
+      {/* 사용자 목록 */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+        {users?.map(user => (
+          <div
+            key={user.id}
+            className={`p-4 border rounded-lg cursor-pointer transition-all ${
+              selectedUserId === user.id
+                ? 'border-blue-500 bg-blue-50 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+            }`}
+            onClick={() => selectUser(user.id)}
+          >
+            {/* 사용자 기본 정보 */}
+            <div className='space-y-2'>
+              <h3 className='font-semibold text-gray-800'>{user.name}</h3>
+              <p className='text-sm text-gray-600'>{user.email}</p>
+              <p className='text-sm text-gray-500'>{user.phone}</p>
+
+              {/* 회사 정보 */}
+              <div className='pt-2 border-t border-gray-100'>
+                <p className='text-xs text-gray-500'>Company</p>
+                <p className='text-sm font-medium text-gray-700'>
+                  {user.company.name}
+                </p>
+                <p className='text-xs text-gray-500 italic'>
+                  &ldquo;{user.company.catchPhrase}&rdquo;
+                </p>
+              </div>
+
+              {/* 웹사이트 */}
+              <div className='pt-2'>
+                <a
+                  href={`https://${user.website}`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-xs text-blue-600 hover:text-blue-800 hover:underline'
+                  onClick={e => e.stopPropagation()} // 부모 클릭 이벤트 방지
+                >
+                  {user.website}
+                </a>
+              </div>
+            </div>
+
+            {/* 선택 상태 표시 */}
+            {selectedUserId === user.id && (
+              <div className='mt-3 pt-2 border-t border-blue-200'>
+                <div className='flex items-center text-blue-600'>
+                  <svg
+                    className='w-4 h-4 mr-1'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                  <span className='text-sm font-medium'>Selected</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 사용자 목록이 비어있을 때 */}
+      {users?.length === 0 && (
+        <div className='text-center py-8 text-gray-500'>
+          <p>No users found</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UsersList;
+```
+
+- `/src/components/UserDetail.tsx 파일` 생성
+  - 사용자 상세 정보
+
+```tsx
+// 선택된 사용자의 상세 정보를 표시하는 컴포넌트
+'use client';
+
+import { usePosts } from '@/hooks/usePosts';
+import { useUserSelection } from '@/hooks/useQueryIntegration';
+
+const UserDetail = () => {
+  // 선택된 사용자 정보를 가져옴
+  const {
+    selectedUserId,
+    selectedUser,
+    isLoading: userLoading,
+    error: userError,
+  } = useUserSelection();
+
+  // 선택된 사용자 게시글 가져옴
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    error: postsError,
+  } = usePosts(selectedUserId || undefined);
+
+  // 사용자가 선택되지 않았을 때 안내 메시지
+  if (!selectedUserId) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center text-gray-500'>
+          <div className='mb-4'>
+            <svg
+              className='w-16 h-16 mx-auto text-gray-300'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={1}
+                d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+              />
+            </svg>
+          </div>
+          <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+            No User Selected
+          </h3>
+          <p className='text-sm'>
+            Please select a user from the list to view their details
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 사용자 정보가 있으면 사용자 상세 정보 로딩중...
+  if (userLoading) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-2 text-gray-600'>Loading user details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 사용자 정보 가져오다가 에러라면
+  if (userError) {
+    return (
+      <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>
+        <div className='text-center text-red-600'>
+          <p className='text-lg font-semibold'>Error loading user</p>
+          <p className='text-sm mt-1'>{userError.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 사용자 정보 및 posts 출력
+
+  return (
+    <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6'>
+      {/* 사용자 기본 정보 */}
+      <div className='border-b border-gray-200 pb-6'>
+        <h2 className='text-2xl font-bold text-gray-800 mb-4'>User Details</h2>
+
+        {selectedUser && (
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            {/* 기본 정보 */}
+            <div className='space-y-4'>
+              <div>
+                <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+                  Basic Information
+                </h3>
+                <div className='space-y-2'>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Name:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.name}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Email:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.email}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Phone:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.phone}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Website:
+                    </span>
+                    <a
+                      href={`https://${selectedUser.website}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-blue-600 hover:text-blue-800 hover:underline'
+                    >
+                      {selectedUser.website}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 회사 정보 */}
+            <div className='space-y-4'>
+              <div>
+                <h3 className='text-lg font-semibold text-gray-700 mb-2'>
+                  Company Information
+                </h3>
+                <div className='space-y-2'>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Company:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.company.name}</p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Catch Phrase:
+                    </span>
+                    <p className='text-gray-800 italic'>
+                      &ldquo;{selectedUser.company.catchPhrase}&rdquo;
+                    </p>
+                  </div>
+                  <div>
+                    <span className='text-sm font-medium text-gray-500'>
+                      Business:
+                    </span>
+                    <p className='text-gray-800'>{selectedUser.company.bs}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 사용자의 게시글 목록 */}
+      <div>
+        <h3 className='text-xl font-semibold text-gray-700 mb-4'>
+          Posts ({posts?.length || 0})
+        </h3>
+
+        {/* 게시글 로딩 중 */}
+        {postsLoading && (
+          <div className='text-center py-4'>
+            <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto'></div>
+            <p className='mt-2 text-sm text-gray-600'>Loading posts...</p>
+          </div>
+        )}
+
+        {/* 게시글 에러 */}
+        {postsError && (
+          <div className='text-center text-red-600 py-4'>
+            <p className='text-sm'>Error loading posts: {postsError.message}</p>
+          </div>
+        )}
+
+        {/* 게시글 목록 */}
+        {posts && posts.length > 0 && (
+          <div className='space-y-4'>
+            {posts.map(post => (
+              <div
+                key={post.id}
+                className='p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all'
+              >
+                <h4 className='font-semibold text-gray-800 mb-2'>
+                  {post.title}
+                </h4>
+                <p className='text-gray-600 text-sm leading-relaxed'>
+                  {post.body}
+                </p>
+                <div className='mt-3 pt-3 border-t border-gray-100'>
+                  <span className='text-xs text-gray-500'>
+                    Post ID: {post.id}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 게시글이 없을 때 */}
+        {posts && posts.length === 0 && !postsLoading && (
+          <div className='text-center py-8 text-gray-500'>
+            <p>No posts found for this user</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default UserDetail;
+```
+
+- `/src/components/PostManager.tsx 파일` 생성
+  - 게시글 관리
+
+```tsx
+// 게시글 CRUD
+// useQuery 와 useMutaion 활용
+'use client';
+
+import {
+  useCreatePost,
+  useDeletePost,
+  usePosts,
+  useUpdatePost,
+} from '@/hooks/usePosts';
+import { useUserSelection } from '@/hooks/useQueryIntegration';
+import { useState } from 'react';
+
+const PostManager = () => {
+  // 선택된 사용자 정보
+  const { selectedUserId } = useUserSelection();
+  // 게시글 목록을 가져옴
+  const {
+    data: posts,
+    isLoading,
+    error,
+  } = usePosts(selectedUserId || undefined);
+
+  // Mutation 훅들
+  const createPostMutation = useCreatePost();
+  const updatePostMutation = useUpdatePost();
+  const deletePostMutation = useDeletePost();
+
+  // 컴포넌트 활용 state
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newPost, setNewPost] = useState({ title: '', body: '' });
+  const [editPost, setEditPost] = useState({ title: '', body: '' });
+
+  // 새 게시글 생성 처리
+  const handleCreatePost = async () => {
+    if (!newPost.title.trim() || !newPost.body.trim()) {
+      return;
+    }
+    try {
+      // Mutation 객체.mutateAsync : 비동기로 뮤테이션을 실행하는 함수이다.
+      await createPostMutation.mutateAsync({
+        // number 가 들어와야 합니다.
+        userId: selectedUserId || 1,
+        title: newPost.title,
+        body: newPost.body,
+      });
+      // 성공시 내용 초기화
+      setNewPost({ title: '', body: '' });
+      setIsCreating(false);
+    } catch (error) {
+      console.log('새글 등록 실패', error);
+    }
+  };
+
+  // 게시글 수정 처리
+  const handleUpdatePost = async (id: number) => {
+    if (!editPost.title.trim() || !editPost.body.trim()) {
+      return;
+    }
+    try {
+      await updatePostMutation.mutateAsync({
+        id,
+        post: {
+          title: editPost.title,
+          body: editPost.body,
+        },
+      });
+
+      // 성공시
+      setEditPost({ title: '', body: '' });
+      setEditingId(null);
+    } catch (error) {
+      console.log('수정에 실패했습니다:', error);
+    }
+  };
+
+  // 게시글 삭제 처리
+  const handleDeletePost = async (id: number) => {
+    if (!confirm('게시글 삭제할래?')) {
+      return;
+    }
+    try {
+      await deletePostMutation.mutateAsync(id);
+    } catch (error) {
+      console.log('삭제에 실패했습니다:', error);
+    }
+  };
+
+  // 게시글 편집 시작
+  const startEdit = (post: any) => {
+    setEditingId(post.id);
+    setEditPost({ title: post.title, body: post.body });
+  };
+  // 게시글 편집 취소
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditPost({ title: '', body: '' });
+  };
+  return (
+    <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6'>
+      {/* 컴포넌트 제목 */}
+      <div className='flex justify-between items-center'>
+        <h2 className='text-2xl font-bold text-gray-800'>Posts Manager</h2>
+
+        {/* 새 게시글 생성 버튼 */}
+        <button
+          onClick={() => setIsCreating(true)}
+          className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
+        >
+          Create New Post
+        </button>
+      </div>
+
+      {/* 새 게시글 생성 폼 */}
+      {isCreating && (
+        <div className='p-4 border border-blue-200 rounded-lg bg-blue-50'>
+          <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+            Create New Post
+          </h3>
+          <div className='space-y-4'>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>
+                Title
+              </label>
+              <input
+                type='text'
+                value={newPost.title}
+                onChange={e =>
+                  setNewPost({ ...newPost, title: e.target.value })
+                }
+                className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                placeholder='Enter post title...'
+              />
+            </div>
+            <div>
+              <label className='block text-sm font-medium text-gray-700 mb-1'>
+                Content
+              </label>
+              <textarea
+                value={newPost.body}
+                onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+                rows={4}
+                className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                placeholder='Enter post content...'
+              />
+            </div>
+            <div className='flex space-x-2'>
+              <button
+                onClick={handleCreatePost}
+                disabled={createPostMutation.isPending}
+                className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 transition-colors'
+              >
+                {createPostMutation.isPending ? 'Creating...' : 'Create Post'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsCreating(false);
+                  setNewPost({ title: '', body: '' });
+                }}
+                className='px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 게시글 목록 */}
+      <div>
+        <h3 className='text-lg font-semibold text-gray-700 mb-4'>
+          Posts ({posts?.length || 0})
+        </h3>
+
+        {/* 로딩 상태 */}
+        {isLoading && (
+          <div className='text-center py-8'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+            <p className='mt-2 text-gray-600'>Loading posts...</p>
+          </div>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <div className='text-center text-red-600 py-8'>
+            <p className='text-lg font-semibold'>Error loading posts</p>
+            <p className='text-sm mt-1'>{error.message}</p>
+          </div>
+        )}
+
+        {/* 게시글 목록 */}
+        {posts && posts.length > 0 && (
+          <div className='space-y-4'>
+            {posts.map(post => (
+              <div
+                key={post.id}
+                className='p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all'
+              >
+                {editingId === post.id ? (
+                  // 편집 모드
+                  <div className='space-y-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Title
+                      </label>
+                      <input
+                        type='text'
+                        value={editPost.title}
+                        onChange={e =>
+                          setEditPost({ ...editPost, title: e.target.value })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Content
+                      </label>
+                      <textarea
+                        value={editPost.body}
+                        onChange={e =>
+                          setEditPost({ ...editPost, body: e.target.value })
+                        }
+                        rows={3}
+                        className='w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      />
+                    </div>
+                    <div className='flex space-x-2'>
+                      <button
+                        onClick={() => handleUpdatePost(post.id)}
+                        disabled={updatePostMutation.isPending}
+                        className='px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 disabled:opacity-50 transition-colors'
+                      >
+                        {updatePostMutation.isPending ? 'Saving...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className='px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors'
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // 표시 모드
+                  <div>
+                    <h4 className='font-semibold text-gray-800 mb-2'>
+                      {post.title}
+                    </h4>
+                    <p className='text-gray-600 text-sm leading-relaxed mb-3'>
+                      {post.body}
+                    </p>
+                    <div className='flex justify-between items-center'>
+                      <span className='text-xs text-gray-500'>
+                        Post ID: {post.id}
+                      </span>
+                      <div className='flex space-x-2'>
+                        <button
+                          onClick={() => startEdit(post)}
+                          className='px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 transition-colors'
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={deletePostMutation.isPending}
+                          className='px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 disabled:opacity-50 transition-colors'
+                        >
+                          {deletePostMutation.isPending
+                            ? 'Deleting...'
+                            : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 게시글이 없을 때 */}
+        {posts && posts.length === 0 && !isLoading && (
+          <div className='text-center py-8 text-gray-500'>
+            <p>No posts found</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PostManager;
+```
+
+- `/src/components/ReactQueryDemo.tsx 파일` 생성
+
+```tsx
+// 테스트 컴포넌트
+'use client';
+import { usePrefetchQuery } from '@/hooks/useQueryIntegration';
+import UsersList from './UsersList';
+import { useState } from 'react';
+import UserDetail from './UserDetail';
+import PostManager from './PostManager';
+
+const ReactQueryDemo = () => {
+  // 프리패치 기능으로 데이터를 사용자가 필요한 것을 예측 캐싱
+  const { prefetchUser, prefetchUserPosts, prefetchPost } = usePrefetchQuery();
+
+  // 컴포넌트 상태로서 프리패치 데모용
+  const [prefetchUserId, setPrefetchUserId] = useState(1);
+  const [prefetchPostId, setPrefetchPostId] = useState(1);
+
+  return (
+    <div className='min-h-screen bg-gray-100 py-8'>
+      <div className='max-w-7xl mx-auto px-4'>
+        {/* 페이지 헤더 */}
+        <div className='text-center mb-8'>
+          <h1 className='text-4xl font-bold text-gray-800 mb-4'>
+            React Query Demo
+          </h1>
+          <p className='text-lg text-gray-600'>
+            React Query를 활용한 현대적인 서버 상태 관리 예제
+          </p>
+        </div>
+
+        {/* 프리페치 데모 섹션 */}
+        <div className='mb-8 p-6 bg-blue-50 rounded-xl'>
+          <h2 className='text-xl font-semibold text-blue-800 mb-4'>
+            🚀 Prefetch Demo
+          </h2>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            {/* 사용자 프리페치 */}
+            <div className='bg-white p-4 rounded-lg'>
+              <h3 className='font-semibold text-gray-700 mb-2'>
+                Prefetch User
+              </h3>
+              <div className='space-y-2'>
+                <input
+                  type='number'
+                  value={prefetchUserId}
+                  onChange={e => setPrefetchUserId(Number(e.target.value))}
+                  className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                  placeholder='User ID'
+                />
+                <button
+                  onClick={() => prefetchUser(prefetchUserId)}
+                  className='w-full px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors'
+                >
+                  Prefetch User
+                </button>
+              </div>
+            </div>
+
+            {/* 게시글 프리페치 */}
+            <div className='bg-white p-4 rounded-lg'>
+              <h3 className='font-semibold text-gray-700 mb-2'>
+                Prefetch Post
+              </h3>
+              <div className='space-y-2'>
+                <input
+                  type='number'
+                  value={prefetchPostId}
+                  onChange={e => setPrefetchPostId(Number(e.target.value))}
+                  className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                  placeholder='Post ID'
+                />
+                <button
+                  onClick={() => prefetchPost(prefetchPostId)}
+                  className='w-full px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition-colors'
+                >
+                  Prefetch Post
+                </button>
+              </div>
+            </div>
+
+            {/* 사용자 게시글 프리페치 */}
+            <div className='bg-white p-4 rounded-lg'>
+              <h3 className='font-semibold text-gray-700 mb-2'>
+                Prefetch User Posts
+              </h3>
+              <div className='space-y-2'>
+                <input
+                  type='number'
+                  value={prefetchUserId}
+                  onChange={e => setPrefetchUserId(Number(e.target.value))}
+                  className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                  placeholder='User ID'
+                />
+                <button
+                  onClick={() => prefetchUserPosts(prefetchUserId)}
+                  className='w-full px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 transition-colors'
+                >
+                  Prefetch Posts
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 메인 콘텐츠 그리드 */}
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+          {/* 사용자 목록 */}
+          <div>
+            <UsersList />
+          </div>
+
+          {/* 선택된 사용자 상세 정보 */}
+          <div>
+            <UserDetail />
+          </div>
+        </div>
+
+        {/* 게시글 관리 섹션 */}
+        <div className='mt-8'>
+          <PostManager />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ReactQueryDemo;
+```
+
+- `/src/app/page.tsx` 배치함
+```tsx
+import ReactQueryDemo from '@/components/ReactQueryDemo';
+
+export default function Home() {
+  return (
+    <div className='text-center pt-10 text-3xl font-bold'>
+      <h2>React Query</h2>
+      <ReactQueryDemo />
+    </div>
+  );
+}
+
+```
