@@ -11,9 +11,10 @@ import {
 import { useUserSelection } from '@/hooks/useQueryIntegration';
 import { useState } from 'react';
 
-const PostManager = () => {
+const Postmanager = () => {
   // 선택된 사용자 정보
   const { selectedUserId } = useUserSelection();
+
   // 게시글 목록을 가져옴
   const {
     data: posts,
@@ -21,7 +22,7 @@ const PostManager = () => {
     error,
   } = usePosts(selectedUserId || undefined);
 
-  // Mutation 훅들
+  // Mutaion 훅들
   const createPostMutation = useCreatePost();
   const updatePostMutation = useUpdatePost();
   const deletePostMutation = useDeletePost();
@@ -38,9 +39,9 @@ const PostManager = () => {
       return;
     }
     try {
-      // Mutation 객체.mutateAsync : 비동기로 뮤테이션을 실행하는 함수이다.
+      // Mutaion객체.mutateAsync : 비동기로 뮤테이션을 실행하는 함수이다.
       await createPostMutation.mutateAsync({
-        // number 가 들어와야 합니다.
+        // number 가 들어와야 해요.
         userId: selectedUserId || 1,
         title: newPost.title,
         body: newPost.body,
@@ -49,7 +50,7 @@ const PostManager = () => {
       setNewPost({ title: '', body: '' });
       setIsCreating(false);
     } catch (error) {
-      console.log('새글 등록 실패', error);
+      console.log('새글 등록 실패:', error);
     }
   };
 
@@ -77,13 +78,13 @@ const PostManager = () => {
 
   // 게시글 삭제 처리
   const handleDeletePost = async (id: number) => {
-    if (!confirm('게시글 삭제할래?')) {
+    if (!confirm('게시글 삭제할래 ? ')) {
       return;
     }
     try {
       await deletePostMutation.mutateAsync(id);
     } catch (error) {
-      console.log('삭제에 실패했습니다:', error);
+      console.log('삭제 실패: ', error);
     }
   };
 
@@ -97,6 +98,7 @@ const PostManager = () => {
     setEditingId(null);
     setEditPost({ title: '', body: '' });
   };
+
   return (
     <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg space-y-6'>
       {/* 컴포넌트 제목 */}
@@ -291,4 +293,4 @@ const PostManager = () => {
   );
 };
 
-export default PostManager;
+export default Postmanager;

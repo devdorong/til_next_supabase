@@ -17,13 +17,12 @@ import { persist } from 'zustand/middleware';
 // set : state 쓰기
 
 // 2 단계 1. localStorage 가 적용 안된 버전
-
 const themeStore = create<ThemeState>()((set, get) => ({
-  // 초기 상태
+  // State 값
   theme: 'system' as Theme,
   setTheme: (theme: Theme) => {
     set({ theme });
-    // 실제 테마 적용하도록 함수 생성해서 호출
+    // 실제 테마 적용하도록 함수해서 호출
     applyTheme(theme);
   },
   toggleTheme: () => {
@@ -36,15 +35,14 @@ const themeStore = create<ThemeState>()((set, get) => ({
 }));
 
 // 2 단계 2. localStorage 가 적용된 버전
-
 const themeLocalStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      // 초기 상태
+      // State 값
       theme: 'system' as Theme,
       setTheme: (theme: Theme) => {
         set({ theme });
-        // 실제 테마 적용하도록 함수 생성해서 호출
+        // 실제 테마 적용하도록 함수해서 호출
         applyTheme(theme);
       },
       toggleTheme: () => {
@@ -56,7 +54,7 @@ const themeLocalStore = create<ThemeState>()(
       },
     }),
     {
-      name: 'theme-store', // 로컬스토리지에 저장되는 이름
+      name: 'theme-storage', // 로컬스토리지에 저장되는 이름
     }
   )
 );
@@ -84,6 +82,6 @@ function applyTheme(theme: Theme) {
 
 // 3 단계 - custom Hook 정의
 export const useThemeStore = () => {
-  const ctx = themeLocalStore();
-  return ctx;
+  const { theme, setTheme, toggleTheme } = themeLocalStore();
+  return { theme, setTheme, toggleTheme };
 };

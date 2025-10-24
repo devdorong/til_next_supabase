@@ -1,17 +1,17 @@
 // 사용자 목록 컴포넌트
-// useQuery 를 사용해서 사용자 목록가져오고 표시함
+// useQuery 를 사용해서 사용자 목록가져오고 표시함.
 // 로딩상태, 에러상태, 데이터 표시 처리
 'use client';
 import { useUserSelection } from '@/hooks/useQueryIntegration';
-import { useUsers } from '@/hooks/useUsers';
+import { useUser, useUsers } from '@/hooks/useUsers';
 
 const UsersList = () => {
   // 사용자 목록 가져오기
   // useQuery 를 활용하면 리턴으로 다양한 정보 객체를 전달해줌.
-  // data : 리턴되는 값, isLoading : 로딩 상태, error : 에러 정보
+  // data 리턴되는 값, isLoading 로딩상태, error 에러
   const { data: users, isLoading, error } = useUsers();
 
-  // 사용자 선택 기능 가져오기
+  // 사용자 선택 기능을 가져오기
   const { selectedUserId, selectUser, clearSelection } = useUserSelection();
 
   // 상황에 따라서 출력을 달리함.
@@ -26,7 +26,7 @@ const UsersList = () => {
       </div>
     );
   }
-  // 에러 상태일 떄
+  // 에러 상태일 때
   if (error) {
     return (
       <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>

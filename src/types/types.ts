@@ -1,6 +1,6 @@
 // Counter Store 타입 정의
 export interface CounterState {
-  count: number; // 현재 카운터 값
+  count: number; // 현재 카운터 값(숫자)
   increment: () => void; // 카운터 1증가
   decrement: () => void; // 카운터 1감소
   reset: () => void; // 카운터 0 초기화
@@ -14,8 +14,7 @@ export interface User {
   email: string;
   avatar?: string;
 }
-
-// User Store 타입 정의
+// User Store 타입
 export interface UserState {
   user: User | null; // 현재 로그인한 사용자 정보(null 이면 로그아웃된 상태)
   isLoggedIn: boolean; // 로그인 여부를 나타내는 Boolean 값
@@ -26,10 +25,11 @@ export interface UserState {
   setLoading: (loading: boolean) => void; // 로딩 상태 설정 함수
 }
 
-// Theme type 정의
+// 테마 타입 정의
+// system 테마 : 시스템 설정을 따르는 테마
 export type Theme = 'light' | 'dark' | 'system';
 
-// Theme Store 타입 정의
+// 테마 Store 타입 정의
 export interface ThemeState {
   theme: Theme; // 현재 선택된 테마
   setTheme: (theme: Theme) => void; // 특정 테마로 설정하는 함수
@@ -44,9 +44,9 @@ export interface Todo {
   createdAt: Date;
   updatedAt: Date;
 }
-
-// Todo Store 타입 정의
-export interface TodoStore {
+// Todo Store 타입정의
+export interface TodoState {
+  // state 타입
   todos: Todo[]; // 모든 할일 목록 배열
   filter: 'all' | 'active' | 'completed'; // 현재 적용된 필터
   // action 타입
@@ -56,7 +56,7 @@ export interface TodoStore {
   updateTodo: (id: string, text: string) => void; // 할일 내용 수정
   setFilter: (filter: 'all' | 'active' | 'completed') => void; // 필터 설정
   clearCompleted: () => void; // 완료된 할일 모두 삭제
-  getFilteredTodos: () => Todo[]; // 현재 선택된 할밀 목록만 반환
+  getFilteredTodos: () => Todo[]; // 현재 선택된 할일 목록만 반환
 }
 
 // React Query Store 타입정의

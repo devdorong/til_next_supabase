@@ -1,7 +1,7 @@
-// User Store - zustand 로 유저 관리
+// User Store - zustand 로 카운터 관리
 
 import { User, UserState } from '@/types/types';
-import { create } from 'zustand';
+import { create, useStore } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // 1 단계 - store 타입 정의 (통상 types/types.ts 에 정의)
@@ -64,12 +64,16 @@ const userLocalStore = create<UserState>()(
     }),
     {
       name: 'user-storage',
+      partialize: state => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+      }),
     }
   )
 );
 
 // 3 단계 - custom Hook 정의
-export const useUserStore = () => {
+export const useUserState = () => {
   const { user, isLoggedIn, isLoading, login, logout, updateUser, setLoading } =
     userLocalStore();
   return { user, isLoggedIn, isLoading, login, logout, updateUser, setLoading };

@@ -9,8 +9,8 @@ export function useTodos(userId?: number) {
   return useQuery({
     queryKey: userId ? ['todos', 'user', userId] : ['todos'],
     queryFn: () => fetchTodos(userId),
-    staleTime: 1 * 60 * 1000, // 5분간은 호출을 막는다. 즉 fresh 유지
-    gcTime: 5 * 60 * 1000, // 10분간 캐시를 유지함.
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 
@@ -21,9 +21,9 @@ export function useTodaysByStatus(userId?: number, completed?: boolean) {
     queryFn: async () => {
       const todos = await fetchTodos(userId);
       // 완료 상태가 지정된 경우 필터링
-      // completed === true : 완료
-      // completed === false : 미완료
-      // completed === undefined : 모두다
+      // complted === true :  완료
+      // complted === false :  미완료
+      // complted === undefiend :  모두다
       if (completed !== undefined) {
         return todos.filter(todo => todo.completed === completed);
       }
@@ -33,7 +33,6 @@ export function useTodaysByStatus(userId?: number, completed?: boolean) {
     gcTime: 5 * 60 * 1000,
   });
 }
-
 // 할일 통계 정보를 가져오는 훅
 export function useTodoStats(userId?: number) {
   const todosQuery = useTodos(userId);
@@ -67,8 +66,9 @@ export function useCreateTodo() {
       return { ...todo, id: Math.random() * 1000 };
     },
     onSuccess: newTodo => {
-      // 할일 목록 퀴르들을 무효화
+      // 할일 목록 쿼리들을 무효화
       queryClient.invalidateQueries({ queryKey: ['todos'] });
+
       // 새로 생성된 할일을 캐시에 추가
       queryClient.setQueryData(['todos', newTodo.id], newTodo);
     },
@@ -93,7 +93,7 @@ export function useUpdateTodo() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { id, ...updates };
     },
-    onSuccess: (_, updatedTodo) => {
+    onSuccess: updatedTodo => {
       // 해당 할일 쿼리를 무효화
       queryClient.invalidateQueries({ queryKey: ['todos', updatedTodo.id] });
       // 할일 목록 쿼리들도 무효화
@@ -134,6 +134,7 @@ export function useToggleTodo() {
     mutationFn: async (id: number) => {
       // 실제 API 테스트 못하므로 데모용으로
       await new Promise(resolve => setTimeout(resolve, 300));
+
       // 현재 할일 정보를 가져와서 상태를 토글
       // 아래 내용 즉, getQueryData 의 용도를 파악해 두자.
       // - api 호출 없이 React Query 의 캐시데이터를 직접 가져오는 방법

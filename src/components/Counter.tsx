@@ -39,7 +39,7 @@ export default function Counter() {
           {/* 감소 버튼 - 클릭 시 decrement 액션 호출 */}
           <button
             onClick={decrement}
-            className='px-4 py-2 cursor-pointer bg-red-500 text-white rounded hover:bg-red-600 transition-colors'
+            className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors'
           >
             -1
           </button>
@@ -47,7 +47,7 @@ export default function Counter() {
           {/* 증가 버튼 - 클릭 시 increment 액션 호출 */}
           <button
             onClick={increment}
-            className='px-4 py-2 cursor-pointer bg-green-500 text-white rounded hover:bg-green-600 transition-colors'
+            className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors'
           >
             +1
           </button>
@@ -55,7 +55,7 @@ export default function Counter() {
           {/* 리셋 버튼 - 클릭 시 reset 액션 호출 */}
           <button
             onClick={reset}
-            className='px-4 py-2 cursor-pointer bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
+            className='px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
           >
             Reset
           </button>

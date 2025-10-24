@@ -16,7 +16,6 @@ import { persist } from 'zustand/middleware';
 // create :  store 즉, state 만들기
 // get : state 읽기
 // set : state 쓰기
-
 // const counterState = create((set, get) => ({
 //   // 상태 (state)
 //   count: 0,
@@ -25,7 +24,6 @@ import { persist } from 'zustand/middleware';
 // }));
 
 // 2 단계 1. localStorage 가 적용 안된버전
-
 const counterState = create<CounterState>()((set, get) => ({
   // 상태값 (state)
   count: 0,
@@ -40,9 +38,7 @@ const counterState = create<CounterState>()((set, get) => ({
 const counterLocalState = create<CounterState>()(
   persist(
     (set, get) => ({
-      // 상태값 (state)
       count: 0,
-      // 상태값 갱신(actions)
       increment: () => set(state => ({ count: state.count + 1 })),
       decrement: () => set(state => ({ count: state.count - 1 })),
       reset: () => set({ count: 0 }),
@@ -53,9 +49,7 @@ const counterLocalState = create<CounterState>()(
 );
 
 // 3 단계 - custom Hook 정의
-
 export const useCounterStore = () => {
-  const ctx = counterLocalState();
-
-  return ctx;
+  const { count, increment, decrement, reset, setCount } = counterLocalState();
+  return { count, increment, decrement, reset, setCount };
 };

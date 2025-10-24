@@ -104,6 +104,6 @@ LICENSE
 # README.md
 
 # Config files that should not be formatted
-# *.config.js
-# *.config.mjs
-# *.config.ts
+*.config.js
+*.config.mjs
+*.config.ts

@@ -50,8 +50,7 @@ const UserDetail = () => {
       </div>
     );
   }
-
-  // 사용자 정보가 있으면 사용자 상세 정보 로딩중...
+  // 사용자 정보가 있으면 사용자 상세 정보 로딩중..
   if (userLoading) {
     return (
       <div className='p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg'>

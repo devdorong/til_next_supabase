@@ -4,7 +4,7 @@ import { QueryState } from '@/types/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// 1단계 타입정의
+// 1 단계 타입 정의
 // interface QueryState {
 //   // State
 //   selectedUserId: number | null; // 현재 선택된 사용자 ID
@@ -13,14 +13,15 @@ import { persist } from 'zustand/middleware';
 //   setSelectedUserId: (userId: number | null) => void; // 선택된 사용자 ID 설정
 //   setSelectedPostId: (postId: number | null) => void; // 선택된 게시글 ID 설정
 // }
-// 2 단계 - store 구현(localStorage 활용)
-const queryLocalStore = create<QueryState>()(
+
+// 2. localStorage 로 생성
+const queryLocalState = create<QueryState>()(
   persist(
     set => ({
       // 초기 state 설정
       selectedUserId: null, // 처음에 선택된 사용자 ID 없음
       selectedPostId: null, // 처음에 선택된 게시글 ID 없음
-      // 초기 action 기능 설정
+      // 초기 Action 기능 설정
       setSelectedUserId: (userId: number | null) => {
         set({ selectedUserId: userId });
       },
@@ -30,17 +31,24 @@ const queryLocalStore = create<QueryState>()(
     }),
     {
       name: 'query-storage', // localStorage 에 저장될 키 이름
-      partialize: state => ({
+      partialize: () => {
         // localStorage 에 보관할 state 지정 가능
-        selectedUserId: state.selectedUserId,
-        selectedPostId: state.selectedPostId,
-      }),
+      },
     }
   )
 );
-// 3 단계 - custom Hook 정의
-
+// 3. 훅 정의
 export const useQueryStore = () => {
-  const ctx = queryLocalStore();
-  return ctx;
+  const {
+    selectedPostId,
+    setSelectedPostId,
+    selectedUserId,
+    setSelectedUserId,
+  } = queryLocalState();
+  return {
+    selectedPostId,
+    setSelectedPostId,
+    selectedUserId,
+    setSelectedUserId,
+  };
 };

@@ -39,7 +39,6 @@ export interface Todo {
   title: string;
   completed: boolean;
 }
-
 // 사용자 목록가져오기 API
 export async function fetchUsers(): Promise<User[]> {
   // Vanila js 활용(Next.js 의 fetch 아님)
@@ -84,15 +83,15 @@ export async function fetchPosts(userId?: number): Promise<Post[]> {
   return response.json();
 }
 
-// 특정 게시글 상세 정보들 가져오기
-
+// 특정 게시글 상세 정보를 가져오기
 export async function fetchPost(id: number): Promise<Post> {
+  // Vanila js 활용(Next.js 의 fetch 아님)
   const response = await fetch(
     `https://jsonplaceholder.typicode.com/posts/${id}`
   );
 
   if (!response.ok) {
-    throw new Error(`게시글 상세정보 가져오기 실패`);
+    throw new Error(`${id} 게시글 상세정보 가져오기 실패`);
   }
 
   return response.json();
@@ -113,7 +112,6 @@ export async function fetchComments(postId: number): Promise<Comment[]> {
 }
 
 // 할일 목록 가져오기
-
 export async function fetchTodos(userId?: number): Promise<Todo[]> {
   const url = userId
     ? `https://jsonplaceholder.typicode.com/todos?userId=${userId}`
