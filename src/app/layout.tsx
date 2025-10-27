@@ -51,7 +51,7 @@ export default function RootLayout({
                 <div className='flex items-center gap-5'>
                   <div className='hover:bg-muted cursor-pointer rounded-full p-2'>
                     <Sun />
-                    <Moon />
+                    <Moon className='hidden' />
                   </div>
                   <Image
                     src={userImage}
