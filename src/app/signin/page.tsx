@@ -6,51 +6,37 @@ import { useSignInWithGoogle } from '@/hooks/mutations/useSignInWithGoogle';
 import { useSignInWithKakao } from '@/hooks/mutations/useSignInWithKakao';
 import Link from 'next/link';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const {
-    mutate: mutateEmail,
-    isPending: isPendingEmail,
-    isError: isErrorEmail,
-  } = useSignIn();
-  const {
-    mutate: mutateKakao,
-    isPending: isPendingKakao,
-    isError: isErrorKakao,
-  } = useSignInWithKakao();
-  const {
-    mutate: mutateGoogle,
-    isPending: isPendingGoogle,
-    isError: isErrorGoogle,
-  } = useSignInWithGoogle();
+  const { mutate: mutateEmail, isPending: isPendingEmail } = useSignIn({
+    onError: error => {
+      setPassword('');
+      toast.error(error.message, { position: 'top-center' });
+    },
+  });
+  const { mutate: mutateKakao, isPending: isPendingKakao } =
+    useSignInWithKakao();
+  const { mutate: mutateGoogle, isPending: isPendingGoogle } =
+    useSignInWithGoogle();
 
   // 이메일로 로그인
   const handleSignInWithEmail = () => {
     if (!email.trim() || !password.trim()) return;
     // 이메일을 이용해서 로그인 진행
-    if (isErrorEmail) {
-      return <div>이메일 로그인 에러입니다.</div>;
-    }
 
     // supabase 로그인
     mutateEmail({ email, password });
   };
   // 카카오 로그인
   const handleSignWithKakao = () => {
-    if (isErrorKakao) {
-      return <div>카카오 로그인 에러 입니다.</div>;
-    }
-
     mutateKakao('kakao');
   };
 
   // 구글 로그인
   const handleSignWithGoogle = () => {
-    if (isErrorGoogle) {
-      return <div>구글 로그인 에러 입니다.</div>;
-    }
     mutateGoogle('google');
   };
   return (

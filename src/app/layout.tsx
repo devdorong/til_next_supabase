@@ -1,11 +1,11 @@
+import QueryProvider from '@/components/providers/QueryProvider';
+import { Moon, Sun } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
-import QueryProvider from '@/components/providers/QueryProvider';
-import Link from 'next/link';
 import Image from 'next/image';
-import { Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import Link from 'next/link';
+import './globals.css';
+import ToastProvider from '@/components/providers/ToastProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,6 +36,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className='flex min-h-screen flex-col'>
+          <ToastProvider />
           <QueryProvider>
             <header className='h-15 border-b'>
               <div className='m-auto flex h-full w-full max-w-175 justify-between px-4'>

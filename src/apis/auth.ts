@@ -11,6 +11,7 @@ export async function signUpWithEmail({
 }) {
   // 웹브라우저를 이용해서 이메일 회원가입
   const { data, error } = await supabase.auth.signUp({ email, password });
+  // 이 부분이 에러 정보를 뿌림
   if (error) throw error;
 
   return data;
