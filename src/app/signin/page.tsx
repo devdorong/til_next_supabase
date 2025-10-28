@@ -2,7 +2,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSignIn } from '@/hooks/mutations/useSignIn';
-import { useSignInWithKakao } from '@/hooks/mutations/useSingInWithKakao';
+import { useSignInWithGoogle } from '@/hooks/mutations/useSignInWithGoogle';
+import { useSignInWithKakao } from '@/hooks/mutations/useSignInWithKakao';
 import Link from 'next/link';
 import React, { useState } from 'react';
 
@@ -19,9 +20,12 @@ function SignIn() {
     isPending: isPendingKakao,
     isError: isErrorKakao,
   } = useSignInWithKakao();
+  const {
+    mutate: mutateGoogle,
+    isPending: isPendingGoogle,
+    isError: isErrorGoogle,
+  } = useSignInWithGoogle();
 
-
-  
   // 이메일로 로그인
   const handleSignInWithEmail = () => {
     if (!email.trim() || !password.trim()) return;
@@ -40,6 +44,14 @@ function SignIn() {
     }
 
     mutateKakao('kakao');
+  };
+
+  // 구글 로그인
+  const handleSignWithGoogle = () => {
+    if (isErrorGoogle) {
+      return <div>구글 로그인 에러 입니다.</div>;
+    }
+    mutateGoogle('google');
   };
   return (
     <div className='flex flex-col gap-8'>
@@ -73,11 +85,19 @@ function SignIn() {
         </Button>
         {/* 카카오 소셜 로그인 */}
         <Button
-          className='w-full py-6 bg-yellow-400 font-bold'
+          className='w-full py-6 bg-yellow-400 font-bold hover:bg-yellow-600'
           onClick={handleSignWithKakao}
           disabled={isPendingKakao}
         >
           카카오 로그인
+        </Button>
+        {/* 구글 소셜 로그인 */}
+        <Button
+          className='w-full py-6 bg-gray-50 border text-gray-500 font-bold hover:bg-gray-300'
+          onClick={handleSignWithGoogle}
+          disabled={isPendingGoogle}
+        >
+          Google 로그인
         </Button>
       </div>
       <div className='flex justify-end'>
