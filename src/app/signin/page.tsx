@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { useSignIn } from '@/hooks/mutations/useSignIn';
 import { useSignInWithGoogle } from '@/hooks/mutations/useSignInWithGoogle';
 import { useSignInWithKakao } from '@/hooks/mutations/useSignInWithKakao';
+import { getErrorMessage } from '@/lib/error';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
@@ -11,16 +12,39 @@ import { toast } from 'sonner';
 function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // 이메일로 로그인
   const { mutate: mutateEmail, isPending: isPendingEmail } = useSignIn({
     onError: error => {
       setPassword('');
-      toast.error(error.message, { position: 'top-center' });
+      // Sonner 로 띄우기
+      // 한글 메시지로 교체
+      const message = getErrorMessage(error);
+      toast.error(message, { position: 'top-center' });
     },
   });
-  const { mutate: mutateKakao, isPending: isPendingKakao } =
-    useSignInWithKakao();
+
+  const { mutate: mutateKakao, isPending: isPendingKakao } = useSignInWithKakao(
+    {
+      onError: error => {
+        // Sonner 로 띄우기
+        // 한글 메시지로 교체
+        const message = getErrorMessage(error);
+        toast.error(message, { position: 'top-center' });
+      },
+    }
+  );
+  
   const { mutate: mutateGoogle, isPending: isPendingGoogle } =
-    useSignInWithGoogle();
+    useSignInWithGoogle({
+      onError: error => {
+        setPassword('');
+        // Sonner 로 띄우기
+        // 한글 메시지로 교체
+        const message = getErrorMessage(error);
+        toast.error(message, { position: 'top-center' });
+      },
+    });
 
   // 이메일로 로그인
   const handleSignInWithEmail = () => {
