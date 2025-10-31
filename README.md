@@ -1,390 +1,74 @@
-# Zustand 와 Supabase Auth
+# 라우터 그룹으로 분기하기
 
-## 1. 참조
+- 사용자 권한별 라우터 분기하기
 
-- supabase 계정에 따라서 type 생성 오류발생함
-- supabase 로그인 이후 진행
+## 1. 회원을 위한 그룹생성
 
-```bash
-npx supabase login
-```
+- `/src/app/(protected) 폴더` 생성
 
-## 2. `React` 와 `Next.js` 는 다르다.
+## 2. 비회원을 위한 그룹 생성
 
-- Supabase 는 `React 라면 lacalstorage 에 로그인 정보` 보관
-- loacalstorage는 웹브라우저 종료해도 남아있어요.
-- loacalstorage는 새로고침 해도 남아있어요.
-- loacalstorage는 유효기한이 없어요.
+- `/src/app/(default) 폴더` 생성
 
-- Supabase 는 `Next 라면 cookie 에 로그인 정보` 보관
-- cookie 웹브라우저 종료해도 남아있어요.
-- cookie 새로고침 해도 남아있어요.
-- cookie 일정 기간만큼 보관(유효기간 존재)
+## 3. 회원을 위한 그룹에 포함할 라우터
 
-## 3. zustand 로 관리하기
+- 아래의 경로는 모두 (protected) 폴더로 이동할 예정
+- `/`
+- `/post/id`
+- `/profile`
+- `/reset-password`
 
-### 3.1. store 만들기
+## 4. 비회원을 위한 그룹에 포함할 라우터
 
-- `/src/stores 폴더` 생성
-- `/src/stores/session.ts 파일` 생성
+- 아래의 경로는 모두 (default) 폴더로 아동할 예정
 
-- 단계 1.
+- `/forget-password`
+- `/signup`
+- `/signin`
 
-```ts
-import { create } from 'zustand';
+## 5. 인증된 사용자 접근 페이지
 
-create();
-```
-
-- 단계 2
-
-```ts
-import { create } from 'zustand';
-import { combine } from 'zustand/middleware';
-
-create(combine());
-```
-
-- 단계 3
-
-```ts
-import { create } from 'zustand';
-import { combine } from 'zustand/middleware';
-
-create(combine(state 객체, 액션함수));
-```
-
-- 단계 4
-
-```ts
-import { create } from 'zustand';
-import { combine } from 'zustand/middleware';
-
-// 보관할 state 객체의 초기값
-const initialState = {
-  isLoading: false,
-  session: null,
-};
-
-create(combine(initialState, () => ({})));
-```
-
-- 단계 5
-
-```ts
-import { create } from 'zustand';
-import { combine } from 'zustand/middleware';
-
-// Supabase 의 인증의 타입을 정의함
-import type { Session } from '@supabase/supabase-js';
-
-type State = {
-  isLoading: boolean;
-  session: null | Session;
-};
-
-// 보관할 state 객체의 초기값
-const initialState: State = {
-  isLoading: false,
-  session: null,
-};
-
-create(combine(initialState, 액션함수));
-```
-
-- 단계 6
-
-```ts
-import { create } from 'zustand';
-import { combine } from 'zustand/middleware';
-
-// Supabase 의 인증의 타입을 정의함
-
-import type { Session } from '@supabase/supabase-js';
-
-type State = {
-  isLoading: boolean;
-  session: null | Session;
-};
-
-// 보관할 state 객체의 초기값
-const initialState: State = {
-  isLoading: false,
-  session: null,
-};
-
-create(combine(initialState, () => ({})));
-```
-
-- 단계 7
-
-```ts
-import { create } from 'zustand';
-import { combine } from 'zustand/middleware';
-
-// Supabase 의 인증의 타입을 정의함
-
-import type { Session } from '@supabase/supabase-js';
-
-type State = {
-  isLoading: boolean;
-  session: null | Session;
-};
-
-// 보관할 state 객체의 초기값
-const initialState: State = {
-  isLoading: false,
-  session: null,
-};
-
-create(
-  combine(initialState, () => ({
-    키명: 기능,
-  }))
-);
-```
-
-- 단계 8
-
-```ts
-create(
-  combine(initialState, () => ({
-    actions: {},
-  }))
-);
-```
-
-- 단계 9
-
-```ts
-// set 은 state 값 설정
-// get 은 state 값 읽기
-create(
-  combine(initialState, (set, get) => ({
-    actions: {},
-  }))
-);
-```
-
-- 단계 10
-
-```ts
-// set 은 state 값 설정
-// get 은 state 값 읽기
-create(
-  combine(initialState, (set, get) => ({
-    actions: {
-      setSession: () => {
-        // 하고싶은일
-      },
-    },
-  }))
-);
-```
-
-- 단계 11
-
-```ts
-// set 은 state 값 설정
-// get 은 state 값 읽기
-create(
-  combine(initialState, (set, get) => ({
-    actions: {
-      setSession: (session: Session | null) => {
-        // 하고싶은일
-        set({ isLoading: true, session });
-      },
-    },
-  }))
-);
-```
-
-### 3.2. devtools 로 개발을 편하게 처리
-
-- 단계 1.
-
-```ts
-import { combine, devtools } from 'zustand/middleware';
-```
-
-- 단계 2.
-
-```ts
-create(devtools());
-```
-
-- 단계 3.
-
-```ts
-create(devtools(combine(), { name: 'sessionStore' }));
-```
-
-### 3.3. 커스텀 훅으로 뽑아주기
-
-- 단계 1.
-
-```ts
-// set 은 state 값 설정
-// get 은 state 값 읽기
-const useSessionStore = create(
-  devtools(
-    combine(initialState, (set, get) => ({
-      actions: {
-        setSession: (session: Session | null) => {
-          // 하고싶은일
-          set({ isLoading: true, session });
-        },
-      },
-    })),
-    { name: 'sessionStore' }
-  )
-);
-```
-
-- Session 정보만 추출하는 커스텀 훅
-
-```ts
-// session 정보
-export const useSession = () => {
-  // Selector 함수는 Store 에서 원하는 것을 선택해서 리턴한다.
-  const session = useSessionStore(store => store.session);
-  return session;
-};
-```
-
-- loading 정보만 추출하는 커스텀 훅
-
-```ts
-// loading 정보
-export const useSessionLoaded = () => {
-  // Selector 함수는 Store 에서 원하는 것을 선택해서 리턴한다.
-  const isSessionLoaded = useSessionStore(store => store.isLoading);
-  return isSessionLoaded;
-};
-```
-
-- setSession 액션만 추출하는 커스텀 훅
-
-```ts
-// session 보관 액션
-export const useSetSession = () => {
-  // Selector 함수는 Store 에서 원하는 것을 선택해서 리턴한다.
-  const setSession = useSessionStore(store => store.actions.setSession);
-  return setSession;
-};
-```
-
-### 3.4. 왜 persist 는 안쓰지?
-
-- Supabase 인증은 자동으로 cookie 에 보관됩니다.
-- local Storage 에 보관하지 않아도 웹브라우저도 가지고 있습니다.
-
-## 4. 활용하기
-
-1. 전역에서 활용하기 위해서 /src/app/layout.tsx 입니다.
-2. 그런데, "use client"를 layout.tsx 에 적용은 곤란함.
-3. 별도의 컴포넌트를 만들어서 layout.tsx 에 배치 권장
-
-### 4.1. 별도의 컴포넌트 생성
-
-- `/src/components/providers 폴더` 생성
-- `/src/components/providers/SessionProvider.tsx 파일` 생성
+- 라우터 따른 처리로 진행
+- `/src/app(protected)/layout.tsx 파일` 생성
 
 ```tsx
-'use client';
-import supabase from '@/lib/supabase/client';
-import { useSessionLoaded, useSetSession } from '@/stores/session';
-import { useEffect } from 'react';
-
-interface SessionProviderProps {
-  children: React.ReactNode;
-}
-export default function SessionProvider({ children }: SessionProviderProps) {
-  const setSession = useSetSession();
-  const isSessionLoaded = useSessionLoaded();
-
-  useEffect(() => {
-    // Supabase 의 인증의 상태가 변함을 체크함.
-    supabase.auth.onAuthStateChange((event, session) => {
-      // zustand 에 보관
-      setSession(session);
-    });
-  }, []);
-
-  // 아직 세션이 없다면
-  if (!isSessionLoaded) return <div>로딩중...</div>;
-  return <div>{children}</div>;
-}
-```
-
-### 4.2. 배치해보기
-
-- `/src/app/layout.tsx` 업데이트
-
-```tsx
-<ToastProvider />
-<QueryProvider>
-    <SessionProvider>
-    ...
-    </SessionProvider>
-</QueryProvider>
-```
-
-### 4.3. 로딩창 만들기
-
-- `/src/components/GlobalLoading.tsx 파일` 생성
-
-```tsx
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import React from 'react';
-import Image from 'next/image';
-export const GlobalLoading = () => {
-  return (
-    <div className='bg-muted flex h-screen w-screen flex-col items-center justify-center'>
-      <div className='mb-15 flex animate-bounce items-center gap-4'>
-        <Image
-          src={'/assets/logo.png'}
-          alt='SNS'
-          className='w-10'
-          width={40}
-          height={40}
-        />
-        <div className='text-2xl font-bold'>SNS 서비스</div>
-      </div>
-    </div>
-  );
-};
-```
-
-### 4.4. 최종코드
-
-` /src/components/providers/SessionProvider.tsx` 업데이트
-
-```tsx
-'use client';
-import supabase from '@/lib/supabase/client';
-import { useSessionLoaded, useSetSession } from '@/stores/session';
-import { useEffect } from 'react';
-import { GlobalLoading } from '../GlobalLoading';
-
-interface SessionProviderProps {
+interface ProtectedLayoutProps {
   children: React.ReactNode;
 }
-export default function SessionProvider({ children }: SessionProviderProps) {
-  const setSession = useSetSession();
-  const isSessionLoaded = useSessionLoaded();
+export default async function ProtectedLayout({
+  children,
+}: ProtectedLayoutProps) {
+  const supabase = await createClient();
+  // 세션정보가 있는지 없는지 기다립니다.
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) redirect('/signin');
 
-  useEffect(() => {
-    // Supabase 의 인증의 상태가 변함을 체크함.
-    supabase.auth.onAuthStateChange((event, session) => {
-      // zustand 에 보관
-      setSession(session);
-    });
-  }, []);
+  return <>{children}</>;
+}
+```
 
-  // 아직 세션이 없다면
+## 6. 인증 되지 않은 사용자 접근 페이지
 
-  if (!isSessionLoaded) return <GlobalLoading />;
+- `/src/(default)/layout.tsx 파일` 생성
 
-  return <div>{children}</div>;
+```tsx
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import React from 'react';
+interface ProtectedLayoutProps {
+  children: React.ReactNode;
+}
+export default async function DefaultLayout({
+  children,
+}: ProtectedLayoutProps) {
+  const supabase = await createClient();
+  // 세션정보가 있는지 없는지 기다립니다.
+  const { data } = await supabase.auth.getSession();
+  if (data.session) redirect('/');
+
+  return <>{children}</>;
 }
 ```

@@ -6,6 +6,7 @@ import { useSignInWithGoogle } from '@/hooks/mutations/useSignInWithGoogle';
 import { useSignInWithKakao } from '@/hooks/mutations/useSignInWithKakao';
 import { getErrorMessage } from '@/lib/error';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -34,7 +35,7 @@ function SignIn() {
       },
     }
   );
-  
+
   const { mutate: mutateGoogle, isPending: isPendingGoogle } =
     useSignInWithGoogle({
       onError: error => {
@@ -46,6 +47,7 @@ function SignIn() {
       },
     });
 
+  const handleKeyDown = () => {};
   // 이메일로 로그인
   const handleSignInWithEmail = () => {
     if (!email.trim() || !password.trim()) return;
@@ -53,6 +55,7 @@ function SignIn() {
 
     // supabase 로그인
     mutateEmail({ email, password });
+    redirect('/');
   };
   // 카카오 로그인
   const handleSignWithKakao = () => {
@@ -82,6 +85,7 @@ function SignIn() {
           placeholder='password'
           className='py-6'
           disabled={isPendingEmail}
+          onKeyDown={handleKeyDown}
         />
       </div>
       <div className='flex flex-col gap-2'>
