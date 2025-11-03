@@ -8,7 +8,7 @@ export type PostTableEntity = Database['public']['Tables']['posts'];
 
 export type UseMutationCallback = {
   onError?: (error: Error) => void;
-  onSucces?: () => void;
+  onSuccess?: () => void;
   onMutate?: () => void;
   onSettled?: () => void;
 };

@@ -114,12 +114,19 @@ function SignIn() {
           Google 로그인
         </Button>
       </div>
-      <div className='flex justify-end'>
+      <div className='flex flex-col gap-2 items-end'>
         <Link
+          className='text-muted-foreground hover:underline'
           href={'/signup'}
-          className='text-muted-foreground hover:underline '
         >
           계정이 없으시다면? 회원가입
+        </Link>
+        {/* 아래 내용 추가 */}
+        <Link
+          className='text-muted-foreground hover:underline'
+          href={'/forget-password'}
+        >
+          비밀번호를 잊으셨나요?
         </Link>
       </div>
     </div>
