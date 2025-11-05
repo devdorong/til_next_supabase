@@ -1,5 +1,5 @@
 import QueryProvider from '@/components/providers/QueryProvider';
-import { Moon, Sun } from 'lucide-react';
+import { ClipboardCheck, List, Moon, Sun } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Image from 'next/image';
@@ -52,6 +52,9 @@ export default function RootLayout({
                     <div className='font-bold'>SNS 서비스</div>
                   </Link>
                   <div className='flex items-center gap-5'>
+                    <Link href={'/todo-list'}>
+                      <ClipboardCheck />
+                    </Link>
                     <div className='hover:bg-muted cursor-pointer rounded-full p-2'>
                       <Sun />
                       <Moon className='hidden' />

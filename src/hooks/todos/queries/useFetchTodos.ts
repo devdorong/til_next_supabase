@@ -6,7 +6,7 @@ export const useFetchTodos = () => {
     queryKey: ['todos'],
     queryFn: fetchTodos,
     // 10분
-    staleTime: 10 * 60 * 1000,
+    staleTime: 1000,
     
   });
 };
