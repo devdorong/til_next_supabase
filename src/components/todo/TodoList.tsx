@@ -13,7 +13,13 @@ function TodoList() {
   return (
     <div className='flex flex-col gap-2'>
       {todos.map(item => (
-        <TodoItem key={item.id} content={item.title} id={item.id} />
+        <TodoItem
+          key={item.id}
+          title={item.title}
+          id={item.id}
+          completed={item.completed}
+          userId={item.userId}
+        />
       ))}
     </div>
   );
