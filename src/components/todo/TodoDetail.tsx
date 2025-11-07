@@ -2,7 +2,7 @@
 import { useTodoDataById } from '@/hooks/todos/queries/useDataById';
 
 const TodoDetail = ({ id }: { id: number }) => {
-  const { data: todo, error, isLoading } = useTodoDataById(id);
+  const { data: todo, error, isLoading } = useTodoDataById(id, 'DETAIL');
 
   if (isLoading) return <div>로딩중...</div>;
   if (error) return <div>에러입니다. {error.message}</div>;

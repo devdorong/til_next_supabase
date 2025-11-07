@@ -3,45 +3,38 @@ import { QUERY_KEYS } from '@/lib/constants';
 import { Todo } from '@/types/todo-type';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export default function useUpdateTodoMutation() {
-  // 1. 전역에 접근
+export function useUpdateTodoMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateTodo,
-    // mutate 함수가 실행되는 시점에 작성
     onMutate: async updatedTodo => {
-      // 요청 취소 기능 구현
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.todo.list });
-
-      // 원본 데이터를 보관함.
-      const originTodos = queryClient.getQueryData<Todo[]>(
-        QUERY_KEYS.todo.list
+      // 하나만 업데이트 하기
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.todo.detail(updatedTodo.id.toString()),
+      });
+      const prevTodo = queryClient.getQueryData<Todo>(
+        QUERY_KEYS.todo.detail(updatedTodo.id.toString())
+      );
+      // 업데이트 된 데이터만 반영해줌
+      queryClient.setQueryData<Todo>(
+        QUERY_KEYS.todo.detail(updatedTodo.id.toString()),
+        prevTodo => {
+          if (!prevTodo) return;
+          return { ...prevTodo, ...updatedTodo };
+        }
       );
 
-      // 낙관적 업데이트를 적용
-      queryClient.setQueryData<Todo[]>(QUERY_KEYS.todo.list, prevTodos => {
-        if (!prevTodos) return [];
-        return prevTodos.map(todo =>
-          todo.id === updatedTodo.id ? { ...todo, ...updatedTodo } : todo
-        );
-      });
-      // 원상 복구할 데이터를 리턴해 준다.
-      return { originTodos };
+      return { prevTodo };
     },
     // 에러가 발생함
     onError: (error, valiable, context) => {
-      console.log(error);
-      if (context?.originTodos) {
-        queryClient.setQueryData<Todo[]>(
-          QUERY_KEYS.todo.list,
-          context.originTodos
+      if (context?.prevTodo) {
+        queryClient.setQueryData<Todo>(
+          QUERY_KEYS.todo.detail(context.prevTodo.id.toString()),
+          context.prevTodo
         );
       }
       return { error };
-    },
-    // 요청이 완료됨
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.todo.list });
     },
   });
 }
