@@ -7,6 +7,7 @@ import Link from 'next/link';
 import './globals.css';
 import ToastProvider from '@/components/providers/ToastProvider';
 import SessionProvider from '@/components/providers/SessionProvider';
+import ModalProvider from '@/components/providers/ModalProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,42 +37,46 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Portal 용 div */}
+        <div id='modal-root' />
         <div className='flex min-h-screen flex-col'>
           <ToastProvider />
           <QueryProvider>
             <SessionProvider>
-              <header className='h-15 border-b'>
-                <div className='m-auto flex h-full w-full max-w-175 justify-between px-4'>
-                  <Link href={'/'} className='flex items-center gap-2'>
-                    <Image
-                      src={logo}
-                      alt='SNS 서비스 로고'
-                      width={40}
-                      height={40}
-                    />
-                    <div className='font-bold'>SNS 서비스</div>
-                  </Link>
-                  <div className='flex items-center gap-5'>
-                    <div className='hover:bg-muted cursor-pointer rounded-full p-2'>
-                      <Sun />
-                      <Moon className='hidden' />
+              <ModalProvider>
+                <header className='h-15 border-b'>
+                  <div className='m-auto flex h-full w-full max-w-175 justify-between px-4'>
+                    <Link href={'/'} className='flex items-center gap-2'>
+                      <Image
+                        src={logo}
+                        alt='SNS 서비스 로고'
+                        width={40}
+                        height={40}
+                      />
+                      <div className='font-bold'>SNS 서비스</div>
+                    </Link>
+                    <div className='flex items-center gap-5'>
+                      <div className='hover:bg-muted cursor-pointer rounded-full p-2'>
+                        <Sun />
+                        <Moon className='hidden' />
+                      </div>
+                      <Image
+                        src={userImage}
+                        alt='사용자 이미지'
+                        width={24}
+                        height={24}
+                        className='h-6'
+                      />
                     </div>
-                    <Image
-                      src={userImage}
-                      alt='사용자 이미지'
-                      width={24}
-                      height={24}
-                      className='h-6'
-                    />
                   </div>
-                </div>
-              </header>
-              <main className='m-auto w-full max-w-175 flex-1 border-x px-4 py-6 '>
-                {children}
-              </main>
-              <footer className='text-muted-foreground border-t py-10 text-center'>
-                @devdorong
-              </footer>
+                </header>
+                <main className='m-auto w-full max-w-175 flex-1 border-x px-4 py-6 '>
+                  {children}
+                </main>
+                <footer className='text-muted-foreground border-t py-10 text-center'>
+                  @devdorong
+                </footer>
+              </ModalProvider>
             </SessionProvider>
           </QueryProvider>
         </div>
