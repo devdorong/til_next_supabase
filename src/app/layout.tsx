@@ -52,9 +52,6 @@ export default function RootLayout({
                     <div className='font-bold'>SNS 서비스</div>
                   </Link>
                   <div className='flex items-center gap-5'>
-                    <Link href={'/todo-list'}>
-                      <ClipboardCheck />
-                    </Link>
                     <div className='hover:bg-muted cursor-pointer rounded-full p-2'>
                       <Sun />
                       <Moon className='hidden' />

@@ -22,12 +22,8 @@ export default function QueryProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0,
-            gcTime: 5 * 60 * 1000, // 5분
-            refetchOnMount: true,
-            refetchOnWindowFocus: true,
-            refetchOnReconnect: false,
-            refetchInterval: false,
+            retry: false,
+            refetchOnWindowFocus: false,
           },
         },
       })
@@ -46,3 +42,16 @@ export default function QueryProvider({
     </QueryClientProvider>
   );
 }
+
+//   {
+//   defaultOptions: {
+//     queries: {
+//       staleTime: 0,
+//       gcTime: 5 * 60 * 1000, // 5분
+//       refetchOnMount: true,
+//       refetchOnWindowFocus: true,
+//       refetchOnReconnect: false,
+//       refetchInterval: false,
+//     },
+//   },
+// }
