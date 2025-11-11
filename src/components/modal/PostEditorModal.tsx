@@ -4,9 +4,23 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { usePostEditorModal } from '@/stores/postEditorModalStore';
 import { useEffect, useRef, useState } from 'react';
+import { useCreatePost } from '@/hooks/post/useCreatePost';
+import { error } from 'console';
+import { toast } from 'sonner';
 
 export default function PostEditorModal() {
   const { isOpen, close } = usePostEditorModal();
+  // 글등록 mutation 을 사용함
+  const { mutate: createPost, isPending: isCreatePostPending } = useCreatePost({
+    onSuccess: () => {
+      toast.success('포스트 생성에 성공했습니다.', { position: 'top-center' });
+      close();
+    },
+    onError: error => {
+      toast.error('포스트 생성에 실패했습니다.', { position: 'top-center' });
+    },
+  });
+
   // post 에 저장할 내용
   const [content, setContent] = useState('');
 
@@ -23,8 +37,14 @@ export default function PostEditorModal() {
   useEffect(() => {
     if (!isOpen) return;
     textareaRef.current?.focus();
-    setContent("")
+    setContent('');
   }, [isOpen]);
+
+  // 실제 포스트 등록하기
+  const handleCreatePost = () => {
+    if (content.trim() === '') return;
+    createPost(content);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
@@ -36,11 +56,14 @@ export default function PostEditorModal() {
           onChange={e => setContent(e.target.value)}
           className='max-h-125 min-h-25 focus:outline-none'
           placeholder='새로운 글을 등록해주세요'
+          disabled={isCreatePostPending}
         />
         <Button variant='outline'>
           <ImageIcon /> 이미지 추가
         </Button>
-        <Button>저장</Button>
+        <Button onClick={handleCreatePost} disabled={isCreatePostPending}>
+          저장
+        </Button>
         <Button>닫기</Button>
       </DialogContent>
     </Dialog>
