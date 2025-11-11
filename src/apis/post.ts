@@ -1,10 +1,8 @@
 import supabase from '@/lib/supabase/client';
 
-export async function fetchPosts(userId: string) {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('author_id', userId);
+export async function fetchPosts() {
+  const { data, error } = await supabase.from('posts').select('*');
+  // .eq('author_id', userId);
   if (error) throw error;
   return data;
 }
