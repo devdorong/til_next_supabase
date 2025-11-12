@@ -8,3 +8,7 @@ export const QUERY_KEYS = {
     byId: (userId: string) => ['profile', 'byId', userId],
   },
 };
+
+// 버킷 이름 : Supabase 저장소
+export const BUCKET_NAME = 'uploads';
+
