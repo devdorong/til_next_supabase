@@ -86,11 +86,22 @@ export async function deletePost(id: number) {
   return data;
 }
 
+// // 5. 포스트 목록 조회
+// export async function fetchPosts() {
+//   const { data, error } = await supabase
+//     .from('posts')
+//     .select('*')
+//     .order('created_at', { ascending: false });
+
+//   if (error) throw error;
+//   return data;
+// }
+
 // 5. 포스트 목록 조회
 export async function fetchPosts() {
   const { data, error } = await supabase
     .from('posts')
-    .select('*')
+    .select('*, author: profiles!author_id(*)')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
