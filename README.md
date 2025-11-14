@@ -244,4 +244,32 @@ export function useDeletePost(callback?: UseMutationCallback) {
   });
 }
 ```
-.
+
+## 5. 내 포스트만 지우기
+
+- `src\components\post\PostItem.tsx` 업데이트
+
+```tsx
+// 내가 만든 post 인지 확인
+const session = useSession();
+const userId = session?.user.id;
+const isMine = userId === post.author.id;
+```
+
+## 6. 활용하기
+
+- `src\components\post\PostItem.tsx` 업데이트
+
+```tsx
+{
+  /* 1-2. 수정/삭제 버튼 */
+}
+<div className='text-muted-foreground flex text-sm'>
+  {isMine && (
+    <>
+      <EditPostItemButton {...post} />
+      <DeletePostButton id={post.id} />
+    </>
+  )}
+</div>;
+```
