@@ -1,19 +1,41 @@
 import { create } from 'zustand';
 import { combine, devtools } from 'zustand/middleware';
 
-const initialState = {
-  isOpen: false,
+type CreateMode = {
+  isOpen: true;
+  type: 'CREATE';
 };
 
-// 단계가 중요함.
-// 미들웨어와 겹침을 주의하자.
-// Store 는 state 와 action 이 있다.
+type EditMode = {
+  isOpen: true;
+  type: 'EDIT';
+
+  postId: number;
+  content: string;
+  imageUrls: string[] | null;
+};
+
+type OpenState = CreateMode | EditMode;
+
+type CloseState = {
+  isOpen: false;
+};
+
+type State = CloseState | OpenState;
+
+const initialState = {
+  isOpen: false,
+} as State;
+
 const usePostEditorStore = create(
   devtools(
     combine(initialState, set => ({
       actions: {
-        open: () => {
-          set({ isOpen: true });
+        openCreate: () => {
+          set({ isOpen: true, type: 'CREATE' });
+        },
+        openEdit: (params: Omit<EditMode, 'isOpen' | 'type'>) => {
+          set({ isOpen: true, type: 'EDIT', ...params });
         },
         close: () => {
           set({ isOpen: false });
@@ -24,21 +46,21 @@ const usePostEditorStore = create(
   )
 );
 
-// 오로지 store 의 actions 의 open 만 가져감
-export const useOpenPostEditorModal = () => {
-  const open = usePostEditorStore(store => store.actions.open);
-  return open;
+export const useOpenCreatePostEditorModal = () => {
+  const openCreate = usePostEditorStore(store => store.actions.openCreate);
+  return openCreate;
 };
-// 오로지 store 의 actions 의 close 만 가져감
+export const useOpenEditPostEditorModal = () => {
+  const openEdit = usePostEditorStore(store => store.actions.openEdit);
+  return openEdit;
+};
+
 export const useClosePostEditorModal = () => {
   const close = usePostEditorStore(store => store.actions.close);
   return close;
 };
-// 미리 store 전체 내보내기
+
 export const usePostEditorModal = () => {
-  const {
-    isOpen,
-    actions: { close, open },
-  } = usePostEditorStore();
-  return { isOpen, close, open };
+  const store = usePostEditorStore();
+  return store as typeof store & State;
 };
