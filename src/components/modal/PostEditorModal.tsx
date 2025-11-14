@@ -59,6 +59,8 @@ export default function PostEditorModal() {
 
   // 이미지 미리보기 내용들
   const [images, setImages] = useState<ImageFile[]>([]);
+  // 메시지 출력하기
+  const [msg, setMsg] = useState('');
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -90,7 +92,8 @@ export default function PostEditorModal() {
   // const handleCreatePost = () => {
 
   const handleSavePost = () => {
-    if (content.trim() === '') return;
+    setMsg('');
+    if (content.trim() === '') return setMsg('내용을 입력해주세요');
     if (!postEditorModalStore.isOpen) return;
     if (postEditorModalStore.type === 'CREATE') {
       createPost({
@@ -140,9 +143,11 @@ export default function PostEditorModal() {
         title: '포스트 작성이 완료되지 않았습니다.',
         description: '화면에서 나가면 작성중이던 내용이 사라집니다.',
         onPositive: () => {
+          setMsg('');
           postEditorModalStore.actions.close();
         },
         onNegative: () => {
+          setMsg('');
           console.log('취소 클릭');
         },
       });
@@ -150,6 +155,7 @@ export default function PostEditorModal() {
     }
 
     postEditorModalStore.actions.close(); // 방지해보자
+    setMsg('');
   };
 
   // 글 수정 또는 새글 작성시 로딩 처리
@@ -246,9 +252,22 @@ export default function PostEditorModal() {
               <ImageIcon /> 이미지 추가
             </Button>
           )}
-        <Button onClick={handleSavePost} disabled={isPending}>
-          저장
-        </Button>
+        <div className='flex flex-col'>
+          <Button onClick={handleSavePost} disabled={isPending}>
+            저장
+          </Button>
+          {msg && (
+            <p
+              className={`mt-2 p-1 rounded-lg text-center border ${
+                msg.includes('성공')
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-600'
+                  : 'bg-rose-50 text-rose-600 border-rose-600'
+              }`}
+            >
+              {msg}
+            </p>
+          )}
+        </div>
         {/* <Button>닫기</Button> */}
       </DialogContent>
     </Dialog>
