@@ -244,4 +244,4 @@ export function useDeletePost(callback?: UseMutationCallback) {
   });
 }
 ```
-
+.
